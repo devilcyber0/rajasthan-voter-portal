@@ -25,20 +25,6 @@
       font-family: 'Outfit', sans-serif;
     }
 
-    /* Infinite Smooth Ticker Animation */
-    @keyframes marquee {
-      0% { transform: translateX(0%); }
-      100% { transform: translateX(-50%); }
-    }
-    .animate-marquee {
-      display: flex;
-      width: max-content;
-      animation: marquee 22s linear infinite;
-    }
-    .animate-marquee:hover {
-      animation-play-state: paused;
-    }
-
     /* Custom Scrollbar for Dropdown List */
     .custom-scroll::-webkit-scrollbar {
       width: 5px;
@@ -54,36 +40,89 @@
     .custom-scroll::-webkit-scrollbar-thumb:hover {
       background: #94a3b8;
     }
+    
+    .subh-float-badge {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 999999;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 38px;
+      padding: 0 14px;
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 12px;
+      letter-spacing: 0.2px;
+      border-radius: 9999px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .subh-float-badge:active {
+      cursor: grabbing;
+      transform: scale(0.97);
+    }
+
+    .subh-float-badge .subh-text strong {
+      color: #38bdf8;
+      font-weight: 600;
+    }
+
+    .subh-float-badge .subh-pulse {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+      animation: subhLiveDot 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+      flex-shrink: 0;
+    }
+
+    @keyframes subhLiveDot {
+      0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+      70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
+
+    .subh-float-badge .subh-arrow {
+      width: 13px;
+      height: 13px;
+      color: #94a3b8;
+      transition: transform 0.2s ease, color 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .subh-float-badge:hover {
+      border-color: rgba(56, 189, 248, 0.4);
+      box-shadow: 0 6px 20px rgba(56, 189, 248, 0.15), 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .subh-float-badge:hover .subh-arrow {
+      color: #38bdf8;
+      transform: translate(2px, -2px);
+    }
+
+    @media (max-width: 480px) {
+      .subh-float-badge {
+        height: 36px;
+        padding: 0 12px;
+        font-size: 11.5px;
+      }
+    }
   </style>
 </head>
 <body class="bg-gradient-to-br from-slate-100 via-sky-50/40 to-slate-100 text-slate-800 min-h-screen antialiased flex flex-col selection:bg-sky-200 selection:text-sky-950">
-
-  <!-- TOP RUNNING TICKER BANNER -->
-  <div class="w-full bg-gradient-to-r from-[#032e5a] via-[#043F7B] to-[#0284c7] text-white py-2 overflow-hidden shadow-sm border-b border-sky-400/20 shrink-0">
-    <div class="animate-marquee whitespace-nowrap flex items-center gap-8 text-[12px] sm:text-xs font-semibold tracking-wide uppercase">
-      <span class="flex items-center gap-2">
-        <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-        <span class="text-sky-200">Official Portal:</span> State Election Commission Rajasthan • Live Voter List System
-      </span>
-      <span class="text-amber-300 font-bold flex items-center gap-1.5">
-        ⚡ Website Created & Managed by Subhash Chouhan
-      </span>
-      <span class="text-sky-100">
-        • Direct PRI & Ward PDF Fetcher 2026 • Fast & Verified Data
-      </span>
-      <!-- Loop duplicate -->
-      <span class="flex items-center gap-2">
-        <span class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
-        <span class="text-sky-200">Official Portal:</span> State Election Commission Rajasthan • Live Voter List System
-      </span>
-      <span class="text-amber-300 font-bold flex items-center gap-1.5">
-        ⚡ Website Created & Managed by Subhash Chouhan
-      </span>
-      <span class="text-sky-100">
-        • Direct PRI & Ward PDF Fetcher 2026 • Fast & Verified Data
-      </span>
-    </div>
-  </div>
 
   <!-- MAIN APP CONTAINER (Top-Aligned) -->
   <main class="max-w-md w-full mx-auto p-3.5 sm:p-5 pt-4 sm:pt-6 space-y-4 flex-grow">
@@ -106,7 +145,7 @@
         </div>
       </div>
 
-      <!-- Fixed-Height Reserved Loading Box (Zero Layout Shift) -->
+      <!-- Fixed-Height Reserved Loading Box -->
       <div class="h-10 my-2.5 flex items-center">
         <div id="loader" class="w-full flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-amber-50/90 border border-amber-200 text-amber-900 transition-opacity duration-200 opacity-0 pointer-events-none shadow-sm">
           <svg class="animate-spin h-4 w-4 text-amber-600 shrink-0" viewBox="0 0 24 24">
@@ -130,7 +169,6 @@
             <span id="distSelectedLabel" class="truncate">-- लोड हो रहा है... --</span>
             <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 shrink-0"></i>
           </div>
-          <!-- Menu Panel -->
           <div id="distDropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl z-30 overflow-hidden">
             <div class="p-2 border-b border-slate-100 bg-slate-50/60">
               <div class="relative flex items-center">
@@ -138,9 +176,7 @@
                 <input type="text" id="distSearchInput" oninput="filterDropdownList('dist')" placeholder="ज़िला खोजें (Search)..." class="w-full pl-8 pr-3 py-2 text-xs font-medium border border-slate-200 rounded-lg outline-none focus:border-sky-500 focus:bg-white bg-slate-100/50">
               </div>
             </div>
-            <div id="distList" class="max-h-52 overflow-y-auto custom-scroll divide-y divide-slate-50 text-xs font-semibold text-slate-700">
-              <!-- Dynamic Options -->
-            </div>
+            <div id="distList" class="max-h-52 overflow-y-auto custom-scroll divide-y divide-slate-50 text-xs font-semibold text-slate-700"></div>
           </div>
         </div>
 
@@ -211,9 +247,9 @@
         <table class="w-full text-left text-xs sm:text-sm border-collapse">
           <thead class="bg-amber-100/60 text-slate-800 font-extrabold border-b border-amber-200/80 uppercase text-[11px] tracking-wider">
             <tr>
-              <th class="py-3 px-4">Grampanchayat</th>
-              <th class="py-3 px-4 text-center">Ward No.</th>
-              <th class="py-3 px-4 text-center">Final PDF</th>
+              <th class="py-3 px-3 sm:px-4">Grampanchayat</th>
+              <th class="py-3 px-2 text-center">Ward</th>
+              <th class="py-3 px-3 sm:px-4 text-center">Actions</th>
             </tr>
           </thead>
           <tbody id="rollsTableBody" class="divide-y divide-slate-100 font-semibold text-slate-700"></tbody>
@@ -223,10 +259,19 @@
 
   </main>
 
-  <!-- Footer Branding Credit -->
+  <!-- Clean Official Footer -->
   <footer class="text-center py-4 text-[11px] font-medium text-slate-400 shrink-0">
-    © 2026 SEC Rajasthan Portal • Built with precision by <span class="text-slate-600 font-bold">Subhash Chouhan</span>
+    © 2026 State Election Commission, Rajasthan • Panchayati Raj Electoral Rolls Portal
   </footer>
+  
+  <!-- Draggable Portfolio Badge -->
+  <div id="subh-drag-badge" class="subh-float-badge" role="button" aria-label="Visit Subh Dev Portfolio">
+    <span class="subh-pulse"></span>
+    <span class="subh-text">Dev by <strong>Subh</strong></span>
+    <svg class="subh-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 17L17 7M7 7h10v10"/>
+    </svg>
+  </div>
 
   <script>
     let currentTokens = {};
@@ -238,7 +283,6 @@
     let selectedPS = { id: '', name: '' };
     let selectedGP = { id: '', name: '' };
 
-    // Raw datasets for live search
     let rawDistricts = [];
     let rawSamitis = [];
     let rawGPs = [];
@@ -259,7 +303,6 @@
       }
     }
 
-    // Toggle Dropdown
     function toggleDropdown(id) {
       if (id === 'psDropdown' && !selectedDistrict.id) return;
       if (id === 'gpDropdown' && !selectedPS.id) return;
@@ -272,7 +315,6 @@
         const input = dropdown.querySelector('input');
         if (input) {
           input.value = '';
-          input.focus();
           const type = id.replace('Dropdown', '');
           filterDropdownList(type);
         }
@@ -285,14 +327,12 @@
       });
     }
 
-    // Outside click to close
     document.addEventListener('click', (e) => {
       if (!e.target.closest('#distGroup') && !e.target.closest('#psGroup') && !e.target.closest('#gpGroup')) {
         closeAllDropdowns();
       }
     });
 
-    // Populate List
     function renderList(type, dataList) {
       const container = document.getElementById(`${type}List`);
       container.innerHTML = '';
@@ -311,7 +351,6 @@
       });
     }
 
-    // Search Filtering
     function filterDropdownList(type) {
       const query = document.getElementById(`${type}SearchInput`).value.toLowerCase().trim();
       let source = type === 'dist' ? rawDistricts : (type === 'ps' ? rawSamitis : rawGPs);
@@ -319,7 +358,6 @@
       renderList(type, filtered);
     }
 
-    // 1. Initial Districts Load
     async function loadDistricts() {
       showLoading(true, 'ज़िलों की लाइव सूची लोड हो रही है...');
       try {
@@ -337,7 +375,6 @@
       }
     }
 
-    // Select Item Handler
     async function selectItem(type, item) {
       closeAllDropdowns();
 
@@ -345,7 +382,6 @@
         selectedDistrict = item;
         document.getElementById('distSelectedLabel').textContent = item.name;
 
-        // Reset & Enable PS
         selectedPS = { id: '', name: '' };
         selectedGP = { id: '', name: '' };
         document.getElementById('psSelectedLabel').textContent = '-- लोड हो रहा है... --';
@@ -384,7 +420,6 @@
         selectedPS = item;
         document.getElementById('psSelectedLabel').textContent = item.name;
 
-        // Reset & Enable GP
         selectedGP = { id: '', name: '' };
         document.getElementById('gpSelectedLabel').textContent = '-- लोड हो रहा है... --';
 
@@ -420,7 +455,6 @@
       }
     }
 
-    // Search Rolls Action
     async function searchRolls() {
       if (!selectedDistrict.id || !selectedPS.id) {
         alert('कृपया ज़िला और पंचायत समिति चुनें!');
@@ -455,13 +489,26 @@
               tr.className = index % 2 === 0 ? 'bg-white' : 'bg-slate-50/70';
 
               tr.innerHTML = `
-                <td class="py-3 px-4 text-slate-900 font-bold">${item.gramPanchayat}</td>
-                <td class="py-3 px-4 text-center text-slate-800 font-extrabold text-sm">${item.wardNo}</td>
-                <td class="py-3 px-4 text-center">
+                <td class="py-3 px-3 sm:px-4 text-slate-900 font-bold leading-tight">${item.gramPanchayat}</td>
+                <td class="py-3 px-2 text-center text-slate-800 font-extrabold text-sm">${item.wardNo}</td>
+                <td class="py-3 px-3 sm:px-4 text-center whitespace-nowrap space-x-1.5">
+                  
+                  <!-- PDF Direct Download Button -->
                   <button onclick="downloadPdf(${index})" 
-                          class="inline-flex items-center justify-center gap-1.5 min-h-[38px] bg-red-50 hover:bg-red-100 active:scale-95 text-red-700 border border-red-200/90 px-3.5 py-1.5 rounded-lg font-bold transition-all text-xs shadow-sm">
-                    <i data-lucide="file-text" class="w-3.5 h-3.5 text-red-600"></i>
+                          title="PDF डाउनलोड करें"
+                          class="inline-flex items-center justify-center gap-1 min-h-[38px] bg-red-50 hover:bg-red-100 active:scale-95 text-red-700 border border-red-200/90 px-3 py-1.5 rounded-lg font-bold transition-all text-xs shadow-sm">
+                    <i data-lucide="download" class="w-3.5 h-3.5 text-red-600"></i>
                     <span>PDF</span>
+                  </button>
+
+                  <!-- WhatsApp Share Button with Telephone Receiver SVG -->
+                  <button onclick="shareDirectPdfWhatsApp(${index})" 
+                          title="व्हाट्सएप पर शेयर करें"
+                          class="inline-flex items-center justify-center gap-1.5 min-h-[38px] bg-[#25D366]/10 hover:bg-[#25D366]/20 active:scale-95 text-[#0d7348] border border-[#25D366]/30 px-3 py-1.5 rounded-lg font-bold transition-all text-xs shadow-sm">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                      <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 1.892.525 3.662 1.438 5.168L2.054 21.4a.75.75 0 00.946.946l4.232-1.384A9.957 9.957 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm-4.75 6.25a.75.75 0 01.75-.75h.85c.348 0 .65.234.735.572l.478 1.912c.07.28-.01.576-.21.776l-.592.593a8.03 8.03 0 004.204 4.204l.593-.592a.75.75 0 01.776-.21l1.912.478c.338.085.572.387.572.735v.85a.75.75 0 01-.75.75c-6.213 0-11.25-5.037-11.25-11.25a.75.75 0 01.75-.75z" fill="#25D366"/>
+                    </svg>
+                    <span>Share</span>
                   </button>
                 </td>
               `;
@@ -479,30 +526,41 @@
       }
     }
 
-    // Direct PDF Resolver
+    async function getResolvedPdfUrl(rollItem) {
+      const res = await fetch('/api/resolve-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          districtId: selectedDistrict.id,
+          psId: selectedPS.id,
+          gpId: selectedGP.id,
+          gpNameEnglish: selectedGP.name || '',
+          rollItem: rollItem,
+          tokens: searchTokens
+        })
+      });
+      return await res.json();
+    }
+
+    // Direct Chrome Force-Download
     async function downloadPdf(itemIndex) {
       const rollItem = currentRollsList[itemIndex];
-      showLoading(true, `वार्ड ${rollItem.wardNo} की PDF फ़ाइल खोली जा रही है...`);
+      showLoading(true, `वार्ड ${rollItem.wardNo} की PDF फ़ाइल डाउनलोड हो रही है...`);
 
       try {
-        const res = await fetch('/api/resolve-url', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            districtId: selectedDistrict.id,
-            psId: selectedPS.id,
-            gpId: selectedGP.id,
-            gpNameEnglish: selectedGP.name || '',
-            rollItem: rollItem,
-            tokens: searchTokens
-          })
-        });
-
-        const data = await res.json();
+        const data = await getResolvedPdfUrl(rollItem);
         showLoading(false);
 
         if (data.success && data.downloadUrl) {
-          window.open(data.downloadUrl, '_blank');
+          const downloadFilename = `VoterList_${rollItem.gramPanchayat}_Ward_${rollItem.wardNo}.pdf`;
+          const downloadEndpoint = `/api/download-proxy?url=${encodeURIComponent(data.downloadUrl)}&filename=${encodeURIComponent(downloadFilename)}`;
+          
+          const a = document.createElement('a');
+          a.href = downloadEndpoint;
+          a.download = downloadFilename;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
         } else {
           alert('डाउनलोड त्रुटि: ' + (data.error || 'फ़ाइल लिंक नहीं मिला'));
         }
@@ -512,8 +570,121 @@
       }
     }
 
+    // Short & High-Converting WhatsApp Message
+    async function shareDirectPdfWhatsApp(itemIndex) {
+      const rollItem = currentRollsList[itemIndex];
+      showLoading(true, `वार्ड ${rollItem.wardNo} का व्हाट्सएप मैसेज तैयार हो रहा है...`);
+
+      try {
+        const data = await getResolvedPdfUrl(rollItem);
+        showLoading(false);
+
+        if (!data.success || !data.downloadUrl) {
+          alert('डाउनलोड लिंक प्राप्त नहीं हो सका!');
+          return;
+        }
+
+        const siteUrl = window.location.origin;
+        const gpName = rollItem.gramPanchayat;
+        const wardNo = rollItem.wardNo;
+        const directPdfLink = data.downloadUrl;
+
+        // Clean Short Pitch Message
+        const shortPitch = 
+`🗳️ *राजस्थान वोटर लिस्ट 2026*
+📍 *${gpName} - वार्ड नं. ${wardNo}*
+
+📥 *PDF डाउनलोड करें:*
+${directPdfLink}
+
+🌐 *अपनी पंचायत/वार्ड की लिस्ट खोजें:*
+👉 ${siteUrl}`;
+
+        const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shortPitch)}`;
+        window.open(waUrl, '_blank');
+
+      } catch (err) {
+        showLoading(false);
+        alert('शेयर करने में समस्या आई!');
+      }
+    }
+
     lucide.createIcons();
     loadDistricts();
+
+    // Draggable Floating Button Handler
+    (function() {
+      const el = document.getElementById('subh-drag-badge');
+      const targetUrl = 'https://subh-dev.netlify.app';
+      
+      let isDragging = false;
+      let startX = 0, startY = 0;
+      let initialLeft = 0, initialTop = 0;
+      let hasMoved = false;
+
+      function onPointerDown(e) {
+        isDragging = true;
+        hasMoved = false;
+
+        const clientX = e.clientX ?? (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY ?? (e.touches && e.touches[0].clientY);
+
+        startX = clientX;
+        startY = clientY;
+
+        const rect = el.getBoundingClientRect();
+        initialLeft = rect.left;
+        initialTop = rect.top;
+
+        el.style.left = `${initialLeft}px`;
+        el.style.top = `${initialTop}px`;
+        el.style.right = 'auto';
+        el.style.bottom = 'auto';
+
+        document.addEventListener('pointermove', onPointerMove);
+        document.addEventListener('pointerup', onPointerUp);
+        document.addEventListener('pointercancel', onPointerUp);
+      }
+
+      function onPointerMove(e) {
+        if (!isDragging) return;
+
+        const clientX = e.clientX;
+        const clientY = e.clientY;
+        const dx = clientX - startX;
+        const dy = clientY - startY;
+
+        if (Math.hypot(dx, dy) > 5) {
+          hasMoved = true;
+        }
+
+        const badgeWidth = el.offsetWidth;
+        const badgeHeight = el.offsetHeight;
+        const maxLeft = window.innerWidth - badgeWidth - 8;
+        const maxTop = window.innerHeight - badgeHeight - 8;
+
+        const newLeft = Math.max(8, Math.min(initialLeft + dx, maxLeft));
+        const newTop = Math.max(8, Math.min(initialTop + dy, maxTop));
+
+        el.style.left = `${newLeft}px`;
+        el.style.top = `${newTop}px`;
+      }
+
+      function onPointerUp() {
+        if (!isDragging) return;
+        isDragging = false;
+
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', onPointerUp);
+        document.removeEventListener('pointercancel', onPointerUp);
+
+        if (!hasMoved) {
+          window.open(targetUrl, '_blank', 'noopener,noreferrer');
+        }
+      }
+
+      el.addEventListener('pointerdown', onPointerDown);
+    })();
   </script>
 </body>
 </html>
