@@ -3,6 +3,8 @@ const { execFile } = require('child_process');
 const cheerio = require('cheerio');
 const cors = require('cors');
 const fs = require('fs');
+const path = require('path');
+const os = require('os');
 
 const app = express();
 app.use(cors());
@@ -10,7 +12,9 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 const SEC_URL = 'https://sec.rajasthan.gov.in/SE_PDFDownload.aspx';
-const COOKIE_FILE = '/data/data/com.termux/files/home/sec-proxy/sec_cookie.txt';
+
+// Cloud (Render/Linux) aur Local dono par kaam karega
+const COOKIE_FILE = path.join(os.tmpdir(), 'sec_cookie.txt');
 
 function fetchWithCurl(args) {
   return new Promise((resolve, reject) => {
@@ -30,7 +34,9 @@ function fetchWithCurl(args) {
 // 1. Initial Districts
 app.get('/api/districts', async (req, res) => {
   try {
-    if (fs.existsSync(COOKIE_FILE)) fs.unlinkSync(COOKIE_FILE);
+    if (fs.existsSync(COOKIE_FILE)) {
+      try { fs.unlinkSync(COOKIE_FILE); } catch (e) {}
+    }
 
     const stdout = await fetchWithCurl([
       '-A', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36',
@@ -59,7 +65,7 @@ app.get('/api/districts', async (req, res) => {
   }
 });
 
-// 2. District -> PS
+// 2. District -> Panchayat Samiti
 app.post('/api/panchayats', async (req, res) => {
   const { districtId, tokens } = req.body;
   try {
@@ -77,7 +83,7 @@ app.post('/api/panchayats', async (req, res) => {
     ].join('&');
 
     const stdout = await fetchWithCurl([
-      '-A', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+      '-A', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36',
       '-H', 'Content-Type: application/x-www-form-urlencoded',
       '-e', SEC_URL,
       '-d', postData,
@@ -110,7 +116,7 @@ app.post('/api/panchayats', async (req, res) => {
   }
 });
 
-// 3. PS -> GP
+// 3. PS -> Gram Panchayat
 app.post('/api/grampanchayats', async (req, res) => {
   const { districtId, psId, tokens } = req.body;
   try {
@@ -128,7 +134,7 @@ app.post('/api/grampanchayats', async (req, res) => {
     ].join('&');
 
     const stdout = await fetchWithCurl([
-      '-A', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+      '-A', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36',
       '-H', 'Content-Type: application/x-www-form-urlencoded',
       '-e', SEC_URL,
       '-d', postData,
@@ -180,7 +186,7 @@ app.post('/api/search', async (req, res) => {
     ].join('&');
 
     const stdout = await fetchWithCurl([
-      '-A', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+      '-A', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36',
       '-H', 'Content-Type: application/x-www-form-urlencoded',
       '-e', SEC_URL,
       '-d', postData,
@@ -233,7 +239,7 @@ app.post('/api/search', async (req, res) => {
   }
 });
 
-// 5. Direct Accurate PDF Resolver
+// 5. Accurate PDF Resolver with Canonical Fallback
 app.post('/api/resolve-url', async (req, res) => {
   const { districtId, psId, gpId, gpNameEnglish, rollItem, tokens } = req.body;
 
@@ -267,7 +273,6 @@ app.post('/api/resolve-url', async (req, res) => {
       SEC_URL
     ]);
 
-    // Check 1: ShowPopup("...!URL*") parsing
     const popupMatch = stdout.match(/ShowPopup\s*\(\s*["']([^"']*![^"']*\.pdf\*[^"']*)["']\s*\)/i);
     if (popupMatch && popupMatch[1]) {
       const s1 = popupMatch[1];
@@ -278,7 +283,6 @@ app.post('/api/resolve-url', async (req, res) => {
       }
     }
 
-    // Check 2: Absolute or Relative URL in body
     if (!resolvedPdfUrl) {
       const m = stdout.match(/(https?:\/\/[a-zA-Z0-9_\/.-]+Publication_PDF[a-zA-Z0-9_\/.-]+\.pdf[^\s"'<>]*)/i) ||
                 stdout.match(/(Publication_PDF[^\s"'<>]+\.pdf)/i);
@@ -290,25 +294,23 @@ app.post('/api/resolve-url', async (req, res) => {
     console.error('Scraping error:', err.message);
   }
 
-  // Guaranteed Canonical Structure Fallback
   if (!resolvedPdfUrl) {
     const wardPadded = String(rollItem.wardNo).padStart(3, '0');
     const cleanGp = (gpNameEnglish || 'RAROD').trim().toUpperCase();
     resolvedPdfUrl = `https://esuchiroll.rajasthan.gov.in/Publication_PDF_2026/PRI/Final/${psId}/${cleanGp}-Ward%20No-${wardPadded}.pdf`;
-    console.log('[CANONICAL FALLBACK APPLIED]:', resolvedPdfUrl);
   }
 
-  // Clean URL form
   resolvedPdfUrl = resolvedPdfUrl.replace(/^https?:\/\/esuchiroll\.rajasthan\.gov\.in\/https?:\/\/esuchiroll\.rajasthan\.gov\.in\//, 'https://esuchiroll.rajasthan.gov.in/');
   if (!resolvedPdfUrl.startsWith('http')) {
     resolvedPdfUrl = `https://esuchiroll.rajasthan.gov.in/${resolvedPdfUrl.replace(/^\//, '')}`;
   }
   resolvedPdfUrl = resolvedPdfUrl.replace(/ /g, '%20');
 
-  console.log('[FINAL PDF URL]:', resolvedPdfUrl);
   return res.json({ success: true, downloadUrl: resolvedPdfUrl });
 });
 
-app.listen(3000, '0.0.0.0', () => {
-  console.log('Server Live: http://localhost:3000');
+// Render dynamic port bind
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server Live on port ${PORT}`);
 });
