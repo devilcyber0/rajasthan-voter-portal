@@ -1,5 +1,5 @@
 const express = require('express');
-const { execFile } = require('child_process');
+const { execFile, spawn } = require('child_process');
 const cheerio = require('cheerio');
 const cors = require('cors');
 const fs = require('fs');
@@ -12,8 +12,6 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 const SEC_URL = 'https://sec.rajasthan.gov.in/SE_PDFDownload.aspx';
-
-// Cloud (Render/Linux) aur Local dono par kaam karega
 const COOKIE_FILE = path.join(os.tmpdir(), 'sec_cookie.txt');
 
 function fetchWithCurl(args) {
@@ -239,7 +237,7 @@ app.post('/api/search', async (req, res) => {
   }
 });
 
-// 5. Accurate PDF Resolver with Canonical Fallback
+// 5. Accurate PDF Resolver
 app.post('/api/resolve-url', async (req, res) => {
   const { districtId, psId, gpId, gpNameEnglish, rollItem, tokens } = req.body;
 
@@ -309,7 +307,28 @@ app.post('/api/resolve-url', async (req, res) => {
   return res.json({ success: true, downloadUrl: resolvedPdfUrl });
 });
 
-// Render dynamic port bind
+// 6. Direct Force-Download Streamer for Chrome
+app.get('/api/download-proxy', (req, res) => {
+  const { url, filename } = req.query;
+  if (!url) return res.status(400).send('URL missing');
+
+  const safeFilename = filename || 'VoterList.pdf';
+
+  // Chrome ko force download karwane ke headers
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(safeFilename)}"`);
+
+  // Direct clean stream from government host without cookies (bypassing block)
+  const curl = spawn('curl', [
+    '-k', '-s', '-L',
+    '--max-time', '60',
+    '-A', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36',
+    url
+  ]);
+
+  curl.stdout.pipe(res);
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server Live on port ${PORT}`);
