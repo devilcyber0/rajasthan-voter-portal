@@ -165,7 +165,7 @@ app.post('/api/grampanchayats', async (req, res) => {
   }
 });
 
-// 4. Search Rolls
+// 4. Robust Search Rolls (With Realtime Cascading Match)
 app.post('/api/search', async (req, res) => {
   const { districtId, psId, gpId, tokens } = req.body;
   try {
@@ -194,6 +194,7 @@ app.post('/api/search', async (req, res) => {
     const $ = cheerio.load(stdout);
     const rolls = [];
 
+    // Parse GridViewPRI specifically
     $('table tr').each((idx, row) => {
       const tds = $(row).find('td');
       if (tds.length >= 3) {
@@ -208,7 +209,8 @@ app.post('/api/search', async (req, res) => {
           targetControl = match[1];
         }
 
-        if (gpName && wardNo) {
+        // Avoid header row values
+        if (gpName && wardNo && !isNaN(wardNo)) {
           rolls.push({
             gramPanchayat: gpName,
             wardNo: wardNo,
@@ -294,7 +296,7 @@ app.post('/api/resolve-url', async (req, res) => {
 
   if (!resolvedPdfUrl) {
     const wardPadded = String(rollItem.wardNo).padStart(3, '0');
-    const cleanGp = (gpNameEnglish || 'RAROD').trim().toUpperCase();
+    const cleanGp = (gpNameEnglish || rollItem.gramPanchayat || 'RAROD').trim().toUpperCase();
     resolvedPdfUrl = `https://esuchiroll.rajasthan.gov.in/Publication_PDF_2026/PRI/Final/${psId}/${cleanGp}-Ward%20No-${wardPadded}.pdf`;
   }
 
@@ -314,11 +316,9 @@ app.get('/api/download-proxy', (req, res) => {
 
   const safeFilename = filename || 'VoterList.pdf';
 
-  // Chrome ko force download karwane ke headers
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(safeFilename)}"`);
 
-  // Direct clean stream from government host without cookies (bypassing block)
   const curl = spawn('curl', [
     '-k', '-s', '-L',
     '--max-time', '60',
