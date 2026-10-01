@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>राजस्थान निर्वाचक नामावली (SEC Rajasthan)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 p-3 sm:p-5">
+
+  <div class="max-w-xl mx-auto space-y-4">
+    
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+      <div class="border-b pb-3 mb-4">
+        <h1 class="text-base sm:text-lg font-bold text-[#043F7B]">State Election Commission, Rajasthan</h1>
+        <p class="text-xs text-slate-500">वार्ड-वाइज़ निर्वाचक नामावली (PDF Download)</p>
+      </div>
+
+      <div id="loader" class="text-xs text-amber-800 bg-amber-50 border border-amber-200 p-2.5 rounded-lg mb-4 flex items-center gap-2">
+        <svg class="animate-spin h-4 w-4 text-amber-600 shrink-0" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+        <span id="loaderMsg">डेटा लोड हो रहा है...</span>
+      </div>
+
+      <div class="space-y-3.5 text-xs sm:text-sm">
+        <div>
+          <label class="block font-bold text-slate-700 uppercase mb-1">1. District (ज़िला)</label>
+          <select id="districtSelect" class="w-full border rounded-lg p-2.5 bg-white outline-none focus:ring-2 focus:ring-blue-600">
+            <option value="">-- लोड हो रहा है... --</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 uppercase mb-1">2. ULB / Panchayat Samiti</label>
+          <select id="psSelect" disabled class="w-full border rounded-lg p-2.5 bg-slate-50 outline-none disabled:opacity-50">
+            <option value="">-- पहले ज़िला चुनें --</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 uppercase mb-1">3. ULB Ward / Gram Panchayat</label>
+          <select id="gpSelect" disabled class="w-full border rounded-lg p-2.5 bg-slate-50 outline-none disabled:opacity-50">
+            <option value="">-- पहले पंचायत समिति चुनें --</option>
+          </select>
+        </div>
+
+        <button id="searchBtn" onclick="searchRolls()" class="w-full mt-2 bg-[#043F7B] hover:bg-blue-900 active:scale-95 text-white font-bold py-3 rounded-lg text-sm transition shadow">
+          SEARCH (मतदाता सूची खोजें)
+        </button>
+      </div>
+    </div>
+
+    <!-- Live Grid Table -->
+    <div id="resultCard" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs sm:text-sm border-collapse">
+          <thead class="bg-[#F6E8B1] text-slate-800 font-bold border-b border-amber-200">
+            <tr>
+              <th class="py-3 px-4">Grampanchayat</th>
+              <th class="py-3 px-4 text-center">Ward No.</th>
+              <th class="py-3 px-4 text-center">Final PDF</th>
+            </tr>
+          </thead>
+          <tbody id="rollsTableBody" class="divide-y divide-slate-200 font-medium"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let currentTokens = {};
+    let searchTokens = {};
+    let currentRollsList = [];
+
+    const distSelect = document.getElementById('districtSelect');
+    const psSelect = document.getElementById('psSelect');
+    const gpSelect = document.getElementById('gpSelect');
+    const loader = document.getElementById('loader');
+    const loaderMsg = document.getElementById('loaderMsg');
+    const resultCard = document.getElementById('resultCard');
+    const rollsTableBody = document.getElementById('rollsTableBody');
+
+    function showLoading(show, msg = 'डेटा लोड हो रहा है...') {
+      loaderMsg.textContent = msg;
+      loader.classList.toggle('hidden', !show);
+    }
+
+    async function loadDistricts() {
+      showLoading(true, 'ज़िलों की लाइव सूची लोड हो रही है...');
+      try {
+        const res = await fetch('/api/districts');
+        const data = await res.json();
+        if (data.success) {
+          currentTokens = data.tokens;
+          distSelect.innerHTML = '<option value="">-- ज़िला चुनें --</option>';
+          data.districts.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d.id;
+            opt.textContent = d.name;
+            distSelect.appendChild(opt);
+          });
+          showLoading(false);
+        }
+      } catch (e) {
+        showLoading(true, 'सर्वर कनेक्शन त्रुटि!');
+      }
+    }
+
+    distSelect.addEventListener('change', async () => {
+      const distId = distSelect.value;
+      psSelect.innerHTML = '<option value="">-- लोड हो रहा है... --</option>';
+      psSelect.disabled = true;
+      gpSelect.innerHTML = '<option value="">-- पहले पंचायत समिति चुनें --</option>';
+      gpSelect.disabled = true;
+      resultCard.classList.add('hidden');
+
+      if (!distId) return;
+
+      showLoading(true, 'पंचायत समितियां लोड हो रही हैं...');
+      try {
+        const res = await fetch('/api/panchayats', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ districtId: distId, tokens: currentTokens })
+        });
+        const data = await res.json();
+        if (data.success) {
+          currentTokens = data.tokens;
+          psSelect.innerHTML = '<option value="">-- पंचायत समिति चुनें --</option>';
+          data.samitis.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.id;
+            opt.textContent = s.name;
+            psSelect.appendChild(opt);
+          });
+          psSelect.disabled = false;
+          showLoading(false);
+        }
+      } catch (e) {
+        showLoading(true, 'त्रुटि हुई!');
+      }
+    });
+
+    psSelect.addEventListener('change', async () => {
+      const distId = distSelect.value;
+      const psId = psSelect.value;
+      gpSelect.innerHTML = '<option value="">-- लोड हो रहा है... --</option>';
+      gpSelect.disabled = true;
+      resultCard.classList.add('hidden');
+
+      if (!psId) return;
+
+      showLoading(true, 'ग्राम पंचायतें लोड हो रही हैं...');
+      try {
+        const res = await fetch('/api/grampanchayats', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ districtId: distId, psId: psId, tokens: currentTokens })
+        });
+        const data = await res.json();
+        if (data.success) {
+          currentTokens = data.tokens;
+          gpSelect.innerHTML = '<option value="">-- ग्राम पंचायत चुनें --</option>';
+          data.gramPanchayats.forEach(g => {
+            const opt = document.createElement('option');
+            opt.value = g.id;
+            opt.textContent = g.name;
+            gpSelect.appendChild(opt);
+          });
+          gpSelect.disabled = false;
+          showLoading(false);
+        }
+      } catch (e) {
+        showLoading(true, 'त्रुटि हुई!');
+      }
+    });
+
+    async function searchRolls() {
+      const distId = distSelect.value;
+      const psId = psSelect.value;
+      const gpId = gpSelect.value;
+
+      if (!distId || !psId) {
+        alert('कृपया ज़िला और पंचायत समिति चुनें!');
+        return;
+      }
+
+      showLoading(true, 'मतदाता सूची खोजी जा रही है...');
+      rollsTableBody.innerHTML = '';
+
+      try {
+        const res = await fetch('/api/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ districtId: distId, psId: psId, gpId: gpId, tokens: currentTokens })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          searchTokens = data.tokens;
+          currentRollsList = data.rolls || [];
+
+          if (currentRollsList.length === 0) {
+            rollsTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-slate-500">कोई डेटा उपलब्ध नहीं है।</td></tr>';
+          } else {
+            currentRollsList.forEach((item, index) => {
+              const tr = document.createElement('tr');
+              tr.className = index % 2 === 0 ? 'bg-white' : 'bg-slate-50';
+
+              tr.innerHTML = `
+                <td class="py-3 px-4 text-slate-800 font-semibold">${item.gramPanchayat}</td>
+                <td class="py-3 px-4 text-center text-slate-700 font-bold">${item.wardNo}</td>
+                <td class="py-3 px-4 text-center">
+                  <button onclick="downloadPdf(${index})" 
+                          class="inline-flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-3 py-1.5 rounded font-bold transition active:scale-95 text-xs shadow-sm">
+                    <svg class="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"/></svg>
+                    <span>PDF</span>
+                  </button>
+                </td>
+              `;
+              rollsTableBody.appendChild(tr);
+            });
+          }
+
+          resultCard.classList.remove('hidden');
+          showLoading(false);
+          resultCard.scrollIntoView({ behavior: 'smooth' });
+        }
+      } catch (e) {
+        showLoading(true, 'सर्च करने में त्रुटि!');
+      }
+    }
+
+    async function downloadPdf(itemIndex) {
+      const rollItem = currentRollsList[itemIndex];
+      showLoading(true, `वार्ड ${rollItem.wardNo} की PDF फ़ाइल खोली जा रही है...`);
+
+      try {
+        const distId = distSelect.value;
+        const psId = psSelect.value;
+        const gpId = gpSelect.value;
+        const gpNameEnglish = gpSelect.options[gpSelect.selectedIndex]?.text || '';
+
+        const res = await fetch('/api/resolve-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            districtId: distId,
+            psId: psId,
+            gpId: gpId,
+            gpNameEnglish: gpNameEnglish,
+            rollItem: rollItem,
+            tokens: searchTokens
+          })
+        });
+
+        const data = await res.json();
+        showLoading(false);
+
+        if (data.success && data.downloadUrl) {
+          window.open(data.downloadUrl, '_blank');
+        } else {
+          alert('डाउनलोड त्रुटि: ' + (data.error || 'फ़ाइल लिंक नहीं मिला'));
+        }
+      } catch (e) {
+        alert('त्रुटि हुई!');
+        showLoading(false);
+      }
+    }
+
+    loadDistricts();
+  </script>
+</body>
+</html>
