@@ -463,6 +463,7 @@
 
       showLoading(true, 'मतदाता सूची खोजी जा रही है...');
       rollsTableBody.innerHTML = '';
+      resultCard.classList.add('hidden');
 
       try {
         const res = await fetch('/api/search', {
@@ -479,6 +480,8 @@
 
         if (data.success) {
           searchTokens = data.tokens;
+          // Refresh currentTokens so next searches stay in sync
+          currentTokens = data.tokens;
           currentRollsList = data.rolls || [];
 
           if (currentRollsList.length === 0) {
